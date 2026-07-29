@@ -407,7 +407,7 @@ func processStates(properties []any) map[string]any {
 }
 
 func parseBlock(block protocol.BlockEntry) (MinecraftBlock, string) {
-	version := "1.26.30"
+	version := "1.26.33"
 	entry := MinecraftBlock{
 		Description: description{
 			Identifier: block.Name,
