@@ -9,6 +9,9 @@ jobs:
   build:
     name: Build
     runs-on: "ubuntu-latest"
+    permissions:
+      contents: write
+      workflows: write
     steps:
       - name: Install SSH Key
         if: ${{ env.SSH_PRIVATE_KEY != '' }}
@@ -20,9 +23,14 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
+          version: 1.0
+
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         if: ${{ env.REPO_KEY != '' }}
         with:
-          packages: git-crypt xxd gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
+          packages: git-crypt xxd
           version: 1.0
         env:
           REPO_KEY: ${{ secrets.REPO_KEY }}
