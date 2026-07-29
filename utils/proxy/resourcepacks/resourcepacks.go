@@ -208,7 +208,11 @@ func (r *ResourcePackHandler) finishedPack(idVer string, pack resource.Pack) err
 			return r.ctx.Err()
 		}
 		if slices.Contains(r.packsRequestedFromServer, idVer) {
-			r.nextPackToClient <- pack
+			select {
+			case r.nextPackToClient <- pack:
+			case <-r.ctx.Done():
+				return context.Cause(r.ctx)
+			}
 		}
 	}
 
@@ -292,6 +296,8 @@ func (r *ResourcePackHandler) OnResourcePacksInfo(pk *packet.ResourcePacksInfo) 
 			for _, dl := range urlDownloads {
 				if err := r.downloadFromUrl(dl); err != nil {
 					r.log.Errorf("download %s %s", dl.DownloadURL, err)
+					_ = r.Server.Close()
+					return
 				}
 			}
 		}()
@@ -333,6 +339,8 @@ func (r *ResourcePackHandler) OnResourcePacksInfo(pk *packet.ResourcePacksInfo) 
 				err := r.downloadResourcePack(pk)
 				if err != nil {
 					r.log.Error(err)
+					_ = r.Server.Close()
+					return
 				}
 			}
 		}()
@@ -461,8 +469,12 @@ func (r *ResourcePackHandler) OnResourcePackDataInfo(pk *packet.ResourcePackData
 		return nil
 	}
 
-	r.packDownloads <- pk
-	return nil
+	select {
+	case r.packDownloads <- pk:
+		return nil
+	case <-r.ctx.Done():
+		return context.Cause(r.ctx)
+	}
 }
 
 // from server
@@ -482,8 +494,12 @@ func (r *ResourcePackHandler) OnResourcePackChunkData(pk *packet.ResourcePackChu
 		return fmt.Errorf("resource pack chunk data had chunk index %v, but expected %v", pk.ChunkIndex, pack.expectedIndex)
 	}
 	pack.expectedIndex++
-	pack.newFrag <- pk
-	return nil
+	select {
+	case pack.newFrag <- pk:
+		return nil
+	case <-r.ctx.Done():
+		return context.Cause(r.ctx)
+	}
 }
 
 // from server
@@ -516,7 +532,11 @@ func (r *ResourcePackHandler) OnResourcePackStack(pk *packet.ResourcePackStack) 
 
 	if r.clientDone != nil {
 		r.log.Debug("waiting for client to finish downloading")
-		<-r.clientDone
+		select {
+		case <-r.clientDone:
+		case <-r.ctx.Done():
+			return context.Cause(r.ctx)
+		}
 	}
 
 	r.log.Debug("starting game")
