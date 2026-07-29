@@ -297,7 +297,7 @@ func (r *ResourcePackHandler) OnResourcePacksInfo(pk *packet.ResourcePacksInfo) 
 				if err := r.downloadFromUrl(dl); err != nil {
 					r.log.Errorf("download %s %s", dl.DownloadURL, err)
 					if closeErr := r.Server.Close(); closeErr != nil {
-						r.log.Debugf("closing server connection after resource pack download failure: %v", closeErr)
+						r.log.Warnf("closing server connection after resource pack download failure: %v", closeErr)
 					}
 					return
 				}
@@ -342,7 +342,7 @@ func (r *ResourcePackHandler) OnResourcePacksInfo(pk *packet.ResourcePacksInfo) 
 				if err != nil {
 					r.log.Error(err)
 					if closeErr := r.Server.Close(); closeErr != nil {
-						r.log.Debugf("closing server connection after resource pack download failure: %v", closeErr)
+						r.log.Warnf("closing server connection after resource pack download failure: %v", closeErr)
 					}
 					return
 				}
