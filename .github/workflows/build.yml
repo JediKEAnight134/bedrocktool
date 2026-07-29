@@ -11,6 +11,7 @@ jobs:
     runs-on: "ubuntu-latest"
     permissions:
       contents: write
+      workflows: write
     steps:
       - name: Install SSH Key
         if: ${{ env.SSH_PRIVATE_KEY != '' }}
